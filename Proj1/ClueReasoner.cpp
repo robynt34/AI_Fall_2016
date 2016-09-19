@@ -51,50 +51,57 @@ void ClueReasoner::PrintNotepad()
 	
 void ClueReasoner::AddInitialClauses()
 {
-	/* The following code is given as an example to show how to create Clauses and post them to the solver. SatSolver.h uses the following typedefs:
+	/* The following code is given as an example to show how to create Clauses and post them to the solver. 
+		SatSolver.h uses the following typedefs:
 		typedef int Literal;
 		typedef std::vector<Literal> Clause;
 		
-	That is, a Literal (a propositional variable or its negation) is defined as a positive or a negative (meaning that it is in negated form, as in -p or -q) integer, and a Clause is defined as a vector of Literals.
+	That is, a Literal is defined as a positive or a negative integer
+	(meaning that it is the negated form, as in -p or -q), and
+	a Clause is defined as a vector of Literals (integers).
 	
-	The function GetPairNum(p, c) returns the literal that corresponds to card c being at location p (either a player's hand or the case_file). 
-	See ClueReasoner.h, lines 7-29 for a definition of the arrays and variables that you can use in your implementation. 
+	The function GetPairNum(p, c) returns the literal that means that player p has card c 
+	(note that p can be case_file as well). 
+	See ClueReasoner.h, lines 7-29 for a definition of the arrays and
+	variables that you can use in your implementation. 
 	*/
 
-	// Each card is in at least one place (including the case file).
-	for (int c = 0; c < num_cards; c++)	// Iterate over all cards.
+	// Each card is in at least one place (including case file).
+	for (int card = 0; card < num_cards; card++)	// Iterate over all cards.
 	{
 		Clause clause;
-		for (int p = 0; p <= num_players; p++)	// Iterate over all players, including the case file (as a possible place for a card).
-			clause.push_back(GetPairNum(p, c));
+		for (int place = 0; place <= num_players; place++)
+			clause.push_back(GetPairNum(place, card));
 		
 		solver->AddClause(clause);
 	}
-        
+    
 	// If a card is in one place, it cannot be in another place.
 	// TO BE IMPLEMENTED AS AN EXERCISE
 	
 	// At least one card of each category is in the case file.
 	// TO BE IMPLEMENTED AS AN EXERCISE
 
-	// No two cards in each category can both be in the case file.
-	// TO BE IMPLEMENTED AS AN EXERCISE
+	
 }
+
 void ClueReasoner::Hand(string player, string cards[3])
 {
-	// GetPlayerNum returns the index of the player in the players array (not the suspects array). Remember that the players array is sorted wrt the order that the players play. Also note that, player_num (not to be confused with num_players) is a private variable of the ClueReasoner class that is initialized when this function is called.
+	// GetPlayerNum returns the index of the player in the players array (not the suspects array). Remember that the
+	// players array is sorted wrt the order that the players play. Also note that, player_num (not to be confused with num_players) 
+	// is a private variable of the ClueReasoner class that is initialized when this function is called.
 	player_num = GetPlayerNum(player);
 	
 	// TO BE IMPLEMENTED AS AN EXERCISE
 }
+
 void ClueReasoner::Suggest(string suggester, string card1, string card2, string card3, string refuter, string card_shown)
 {
-	// Note that in the Java implementation, the refuter and the card_shown can be NULL. 
-	// In this C++ implementation, NULL is translated to be the empty string "".
-	// To check if refuter is NULL or card_shown is NULL, you should use if(refuter == "") or if(card_shown == ""), respectively.
-	
-	// TO BE IMPLEMENTED AS AN EXERCISE
+// TO BE IMPLEMENTED AS AN EXERCISE
+
 }
+
+
 void ClueReasoner::Accuse(string suggester, string card1, string card2, string card3, bool is_correct)
 {
 	// TO BE IMPLEMENTED AS AN EXERCISE
