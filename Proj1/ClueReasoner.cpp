@@ -67,22 +67,111 @@ void ClueReasoner::AddInitialClauses()
 	*/
 
 	// Each card is in at least one place (including case file).
-	for (int card = 0; card < num_cards; card++)	// Iterate over all cards.
+	for (int card = 0; card < num_cards; card++)
 	{
 		Clause clause;
 		for (int place = 0; place <= num_players; place++)
 			clause.push_back(GetPairNum(place, card));
-		
 		solver->AddClause(clause);
+
+		// If a card is in one place, it cannot be in another place.
+		// TO BE IMPLEMENTED AS AN EXERCISE
+
+		// For each card, enter the possibility of where teh card is and what that means
+		for (int place = 0; place <= num_players - 1; place++)
+		{
+			for (int j = place + 1; j <= num_players; j++)
+			{
+				// Separate clause for each possibility of where teh card is
+				Clause clause;
+
+				// The card is either in not in place or not in j
+				clause.push_back(-GetPairNum(place, card));
+				clause.push_back(-GetPairNum(j, card));
+
+				solver->AddClause(clause);
+			}
+		}
 	}
-    
-	// If a card is in one place, it cannot be in another place.
-	// TO BE IMPLEMENTED AS AN EXERCISE
-	
+
 	// At least one card of each category is in the case file.
 	// TO BE IMPLEMENTED AS AN EXERCISE
 
+	// At least one player in the case file
+	Clause playerClause;
+	for (int outerPlayer = 0; outerPlayer < num_players; outerPlayer++)
+	{
+		Clause clause;
+		for (int innerPlayer = 0; innerPlayer < num_players; innerPlayer++)
+		{
+			if (outerPlayer == innerPlayer)
+			{
+				clause.push_back(GetPairNum(case_file, players[innerPlayer]));
+			}
+			else
+			{
+				clause.push_back(-GetPairNum(case_file, players[outerPlayer]));
+			}
+		}
+		solver->AddClause(clause);
 	
+		// Unique player
+		playerClause.push_back(GetPairNum(case_file, players[outerPlayer]));
+	}
+	solver->AddClause(playerClause);
+	
+	// At least one weapon in the case file
+	for (int outerWeapon = 0; outerWeapon < num_weapons; outerWeapon++)
+	{
+		Clause clause;
+		for (int innerWeapon = 0; innerWeapon < num_weapons; innerWeapon++)
+		{
+			if (outerWeapon == innerWeapon)
+			{
+				clause.push_back(GetPairNum(case_file, weapons[innerWeapon]));
+			}
+			else
+			{
+				clause.push_back(-GetPairNum(case_file, weapons[innerWeapon]));
+			}
+		}
+		solver->AddClause(clause);
+	}
+
+	// At least one room in the case file
+	for (int outerRoom = 0; outerRoom < num_rooms; outerRoom++)
+	{
+		Clause clause;
+		for (int innerRoom = 0; innerRoom < num_rooms; innerRoom++)
+		{
+			if (outerRoom == innerRoom)
+			{
+				clause.push_back(GetPairNum(case_file, rooms[innerRoom]));
+			}
+			else
+			{
+				clause.push_back(-GetPairNum(case_file, rooms[innerRoom]));
+			}
+		}
+		solver->AddClause(clause);
+	}
+
+	// Unique weapon
+	Clause weaponClause;
+	for (int r = 0; r < num_weapons; r++)
+	{
+		weaponClause.push_back(GetPairNum(case_file, weapons[r]));
+	}
+	solver->AddClause(weaponClause);
+	
+
+	// Unique room
+	Clause roomClause;
+	for (int r = 0; r < num_rooms; r++)
+	{
+		roomClause.push_back(GetPairNum(case_file, rooms[r]));
+	}
+	solver->AddClause(roomClause);
 }
 
 void ClueReasoner::Hand(string player, string cards[3])
@@ -93,12 +182,144 @@ void ClueReasoner::Hand(string player, string cards[3])
 	player_num = GetPlayerNum(player);
 	
 	// TO BE IMPLEMENTED AS AN EXERCISE
+	// This is structured so that there is a separate clause for each card in the player's hand
+	// rather than being in a single clause.
+	for (int c = 0; c < 3; c++)
+	{
+		// Add that the player has the card and the case file does not.
+		Clause hasCard, notInCaseFile;
+hasCard.push_back(GetPairNum(player, cards[c]));
+		notInCaseFile.push_back(-GetPairNum(case_file, cards[c]));
+solver->AddClause(hasCard);
+		solver->AddClause(notInCaseFile);
+// Add that no other players have these cards
+		for (int p = 0; p < num_players; ++p)
+		{
+			if (p != player_num)
+			{
+				Clause notWithPlayer;
+notWithPlayer.push_back(-GetPairNum(players[p], cards[c]));
+solver->AddClause(notWithPlayer);
+			}
+		}
+	}
+// Add that the player doesn't have any of the other cards.
+	for (int c = 0; c < num_cards; ++c)
+	{
+		if (c != GetCardNum(cards[0]) && c != GetCardNum(cards[1]) && c != GetCardNum(cards[2]))
+		{
+			Clause doesNotHaveCard;
+doesNotHaveCard.push_back(-GetPairNum(player_num, c));
+solver->AddClause(doesNotHaveCard);
+		}
+	}
 }
 
 void ClueReasoner::Suggest(string suggester, string card1, string card2, string card3, string refuter, string card_shown)
 {
+#if 1
+	// Note that in the Java implementation, the refuter and the card_shown can be NULL. 
+	// In this C++ implementation, NULL is translated to be the empty string "".
+	// To check if refuter is NULL or card_shown is NULL, you should use if(refuter == "") or if(card_shown == ""), respectively.
+	
+	// TODO: Should the suggester be included in the first 2 cases?
 // TO BE IMPLEMENTED AS AN EXERCISE
-
+	// Case refuter and card shown are not empty (I make a suggestion that someone refutes)
+	if (refuter != "" && card_shown != "")
+	{
+		// Add that the refuter has card_shown
+		// Add that the case file does not have the card shown
+		Clause refuterHasCardShown, notInCaseFile;
+refuterHasCardShown.push_back(GetPairNum(refuter, card_shown));
+		notInCaseFile.push_back(-GetPairNum(case_file, card_shown));
+solver->AddClause(refuterHasCardShown);
+		solver->AddClause(notInCaseFile);
+// Add that all players between current player and refuter don't have the card shown
+		int refuterNum = GetPlayerNum(refuter);
+		int suggesterNum = GetPlayerNum(suggester);
+for (int p = 0; p < num_players; p++)
+		{
+			if (p != refuterNum && p != player_num)
+			{
+				Clause playerDoesNotHaveCardShown;
+playerDoesNotHaveCardShown.push_back(-GetPairNum(players[p], card_shown));
+solver->AddClause(playerDoesNotHaveCardShown);
+			}
+		}
+for (int p = (suggesterNum + 1) % num_players;
+			p != refuterNum && p != suggesterNum;
+			p =  (p + 1) % num_players)
+		{
+			if (p != player_num)
+			{
+				Clause playerDoesNotHaveCard1, playerDoesNotHaveCard2, playerDoesNotHaveCard3;
+playerDoesNotHaveCard1.push_back(-GetPairNum(players[p], card1));
+				playerDoesNotHaveCard2.push_back(-GetPairNum(players[p], card2));
+				playerDoesNotHaveCard3.push_back(-GetPairNum(players[p], card3));
+solver->AddClause(playerDoesNotHaveCard1);
+				solver->AddClause(playerDoesNotHaveCard2);
+				solver->AddClause(playerDoesNotHaveCard3);
+			}
+		}
+	}
+	
+	// Case refuter is valid, card shown is empty (Someone else makes a suggestion that someone else refutes).
+	else if (refuter != "" && card_shown == "")
+	{
+		// Add that the refuter has one of these cards.
+		Clause refuterHasACard, aCardNotInCaseFile;
+refuterHasACard.push_back(GetPairNum(refuter, card1));
+		refuterHasACard.push_back(GetPairNum(refuter, card2));
+		refuterHasACard.push_back(GetPairNum(refuter, card3));
+aCardNotInCaseFile.push_back(-GetPairNum(case_file, card1));
+		aCardNotInCaseFile.push_back(-GetPairNum(case_file, card2));
+		aCardNotInCaseFile.push_back(-GetPairNum(case_file, card3));
+solver->AddClause(refuterHasACard);
+		solver->AddClause(aCardNotInCaseFile);
+// Add that players between suggester and refuter don't have card shown.
+		int refuterNum = GetPlayerNum(refuter);
+		int suggesterNum = GetPlayerNum(suggester);
+for (int p = (suggesterNum + 1) % num_players;
+			p != refuterNum && p != suggesterNum;
+			p =  (p + 1) % num_players)
+		{
+			if (p != player_num)
+			{
+				Clause playerDoesNotHaveCard1, playerDoesNotHaveCard2, playerDoesNotHaveCard3;
+playerDoesNotHaveCard1.push_back(-GetPairNum(players[p], card1));
+				playerDoesNotHaveCard2.push_back(-GetPairNum(players[p], card2));
+				playerDoesNotHaveCard3.push_back(-GetPairNum(players[p], card3));
+solver->AddClause(playerDoesNotHaveCard1);
+				solver->AddClause(playerDoesNotHaveCard2);
+				solver->AddClause(playerDoesNotHaveCard3);
+			}
+		}
+	}
+// Case refuter and card shown are both empty (Nobody was able to refute the suggestion)
+	else if (refuter == "" && card_shown == "")
+	{
+		// Add that all players except the suggester don't have any of the suggested cards.
+		int suggesterNum = GetPlayerNum(suggester);
+for (int p = 0; p < num_players; p++)
+		{
+			if (p != suggesterNum)
+			{
+				Clause playerDoesNotHaveCard1, playerDoesNotHaveCard2, playerDoesNotHaveCard3;
+playerDoesNotHaveCard1.push_back(-GetPairNum(players[p], card1));
+				playerDoesNotHaveCard2.push_back(-GetPairNum(players[p], card2));
+				playerDoesNotHaveCard3.push_back(-GetPairNum(players[p], card3));
+solver->AddClause(playerDoesNotHaveCard1);
+				solver->AddClause(playerDoesNotHaveCard2);
+				solver->AddClause(playerDoesNotHaveCard3);
+			}
+		}
+	}
+	else
+	{
+		cout << "No case handled. " << "Suggester: " << suggester << ", card_shown: " << card_shown << endl;
+		cout << endl;
+	}
+	#endif
 }
 
 
