@@ -176,40 +176,13 @@ void ClueReasoner::Hand(string player, string cards[3])
 	player_num = GetPlayerNum(player);
 	
 	// TO BE IMPLEMENTED AS AN EXERCISE
-	// Record that our player doesn't have any other cards
-	for (int c = 0; c < num_cards; ++c)
+
+	// Record our player has the cards
+	for(int c = 0; c < 3; c++)
 	{
-		if (c != GetCardNum(cards[0]) && c != GetCardNum(cards[1]) && c != GetCardNum(cards[2]))
-		{
-			Clause doesNotHaveCard;
-			doesNotHaveCard.push_back(-GetPairNum(player_num, c));
-			solver->AddClause(doesNotHaveCard);
-		}
-	}
-
-	// Record that these cards are not in teh case file and nobody else has them
-	for (int c = 0; c < 3; c++)
-	{
-		Clause inHand, notInCaseFile;
-
-		// Record that our player has this card
-		inHand.push_back(GetPairNum(player, cards[c]));
-		solver->AddClause(inHand);
-
-		// Record this card is not in the case file
-		notInCaseFile.push_back(-GetPairNum(case_file, cards[c]));
-		solver->AddClause(notInCaseFile);
-
-		// Record that no other players have our player's cards
-		for (int p = 0; p < num_players; ++p)
-		{
-			if (p != player_num)
-			{
-				Clause noOtherPlayerHas;
-				noOtherPlayerHas.push_back(-GetPairNum(players[p], cards[c]));
-				solver->AddClause(noOtherPlayerHas);
-			}
-		}
+		Clause hasCard;
+		hasCard.push_back(GetPairNum(player, cards[c]));
+		solver->AddClause(hasCard);
 	}
 }
 
