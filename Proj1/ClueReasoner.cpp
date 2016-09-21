@@ -115,12 +115,14 @@ void ClueReasoner::AddInitialClauses()
 		}
 		solver->AddClause(clause);
 	
-		// Unique player
+		// Only one player can be in the case file
 		playerClause.push_back(GetPairNum(case_file, players[outerPlayer]));
 	}
 	solver->AddClause(playerClause);
 	
 	// At least one weapon in the case file
+	// Unique weapon
+	Clause weaponClause;
 	for (int outerWeapon = 0; outerWeapon < num_weapons; outerWeapon++)
 	{
 		Clause clause;
@@ -136,9 +138,14 @@ void ClueReasoner::AddInitialClauses()
 			}
 		}
 		solver->AddClause(clause);
+
+		// Only one weapon can be in the case file
+		weaponClause.push_back(GetPairNum(case_file, weapons[outerWeapon]));
 	}
+	solver->AddClause(weaponClause);
 
 	// At least one room in the case file
+	Clause roomClause;
 	for (int outerRoom = 0; outerRoom < num_rooms; outerRoom++)
 	{
 		Clause clause;
@@ -154,22 +161,9 @@ void ClueReasoner::AddInitialClauses()
 			}
 		}
 		solver->AddClause(clause);
-	}
 
-	// Unique weapon
-	Clause weaponClause;
-	for (int r = 0; r < num_weapons; r++)
-	{
-		weaponClause.push_back(GetPairNum(case_file, weapons[r]));
-	}
-	solver->AddClause(weaponClause);
-	
-
-	// Unique room
-	Clause roomClause;
-	for (int r = 0; r < num_rooms; r++)
-	{
-		roomClause.push_back(GetPairNum(case_file, rooms[r]));
+		// Only one room can be in the case file
+		roomClause.push_back(GetPairNum(case_file, rooms[outerRoom]));
 	}
 	solver->AddClause(roomClause);
 }
