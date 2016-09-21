@@ -105,6 +105,7 @@ void ClueReasoner::AddInitialClauses()
 		Clause clause;
 		for (int innerPlayer = 0; innerPlayer < num_players; innerPlayer++)
 		{
+			// only one can be in case file
 			if (outerPlayer == innerPlayer)
 			{
 				clause.push_back(GetPairNum(case_file, players[innerPlayer]));
@@ -116,7 +117,7 @@ void ClueReasoner::AddInitialClauses()
 		}
 		solver->AddClause(clause);
 	
-		// Only one player can be in the case file
+		// At least one is in case file
 		playerClause.push_back(GetPairNum(case_file, players[outerPlayer]));
 	}
 	solver->AddClause(playerClause);
@@ -140,7 +141,7 @@ void ClueReasoner::AddInitialClauses()
 		}
 		solver->AddClause(clause);
 
-		// Only one weapon can be in the case file
+		// At least one weapon can be in the case file
 		weaponClause.push_back(GetPairNum(case_file, weapons[outerWeapon]));
 	}
 	solver->AddClause(weaponClause);
@@ -163,7 +164,7 @@ void ClueReasoner::AddInitialClauses()
 		}
 		solver->AddClause(clause);
 
-		// Only one room can be in the case file
+		// At least one room can be in the case file
 		roomClause.push_back(GetPairNum(case_file, rooms[outerRoom]));
 	}
 	solver->AddClause(roomClause);
@@ -239,42 +240,21 @@ void ClueReasoner::Suggest(string suggester, string card1, string card2, string 
 		{
 			// Some player shows some card to ME to refute the suggestion (I know the card and the player)
 			// Add that the refuter has card_shown FOR SURE
+			// Our initial clauses will know that a card can only be in one spot
 			Clause hasCard;
 			hasCard.push_back(GetPairNum(refuter, card_shown));
 			solver->AddClause(hasCard);
-
-			// Add that the case file does not have the card shown FOR SURE
-			Clause notInCF;
-			notInCF.push_back(-GetPairNum(case_file, card_shown));
-			solver->AddClause(notInCF);
-
-			// Say that nobody besides refuter has the shown card FOR SURE (for sure == each own clause)
-			for (int p = 0; p < num_players; p++)
-			{
-				if (p != refNum)
-				{
-					Clause notShown;
-					notShown.push_back(-GetPairNum(players[p], card_shown));
-					solver->AddClause(notShown);
-				}
-			}
 		}
 		else if (card_shown == "")
 		{
 			// I know the refuter but I don't know the card shown
 			// Add clause that refuter has 1 OR 2 OR 3 
+			// Don't need to add clauses that 1 or 2 or 3 is not in case file because we added that if a card is in one spot it is not in another
 			Clause refHas;
 			refHas.push_back(GetPairNum(refuter, card1));
 			refHas.push_back(GetPairNum(refuter, card2));
 			refHas.push_back(GetPairNum(refuter, card3));		
 			solver->AddClause(refHas);
-
-			// Add clause that 1 OR 2 OR 3 is not in the case file
-			Clause notInCF;
-			notInCF.push_back(-GetPairNum(case_file, card1));
-			notInCF.push_back(-GetPairNum(case_file, card2));
-			notInCF.push_back(-GetPairNum(case_file, card3));
-			solver->AddClause(notInCF);
 		}
 	}
 }
