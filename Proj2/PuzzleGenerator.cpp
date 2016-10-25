@@ -10,14 +10,20 @@ Puzzle PuzzleGenerator::GeneratePuzzle()
 	timer.StartTimer();
 	maxtime = 59.9;	// To make sure we don't exceed a minute
 	
-	return RandomWalk(5);	// Do a random walk for 5 seconds and return the solution.
-
 	// We could also do as many random walks as we can within the given time limit.
+	Puzzle bestPuzzle(nRows, nColumns, minVal, maxVal);
 	while (timer.GetElapsedTime() + 5 < maxtime)
 	{
-		Puzzle p = RandomWalk(5);
+
+		Puzzle p = HillClimb(5);
+
 		// Check if p is better than the best puzzle we have found so far.
+		if(p.GetValue() > bestPuzzle.GetValue())
+		{
+			bestPuzzle = p;
+		}
 	}
+	return bestPuzzle;
 }
 
 Puzzle PuzzleGenerator::RandomWalk(double timelimit)
@@ -34,26 +40,81 @@ Puzzle PuzzleGenerator::RandomWalk(double timelimit)
 	// Keep track of the time so we don't exceed it.
 	Timer t;
 	t.StartTimer();
-	
+	 
 	// Loop until we hit the time limit.
 	while (t.GetElapsedTime() < timelimit-0.1)	// To make sure that we don't exceed the time limit, we stop just before we hit the time limit.
 	{
 		// Generate a successor of p by randomly changing the value of a random cell 
 		// (since we are doing a random walk, we just replace p with its successor).
-		p = p.GetRandomSuccessor();	
+		//p = p.GetRandomSuccessor();
+		printf("Best value: %d P: %d\n", bestValue, p.GetValue());
+
+		vector<Puzzle> successors;
+		bestPuzzle.GetAllSuccessors(successors);
+		for(int i = 0; i < successors.size(); i++)
+		{
+			if(successors[i].GetValue() > bestValue)
+			{
+				bestValue = successors[i].GetValue();
+				printf("new val: %d\n", bestValue);
+				bestPuzzle = successors[i];
+			}
+		}
 		
 		// Update the current best solution.
-		if (p.GetValue() > bestValue)	// Calling GetValue() for the first time is costly
-										// since the puzzle has to be evaluated first.
-		{
-			bestValue = p.GetValue();	// Calling it a second time simply returns the value that was computed before.
-			bestPuzzle = p;
-		}
+		// if (p.GetValue() > bestValue)	// Calling GetValue() for the first time is costly
+		// 								// since the puzzle has to be evaluated first.
+		// {
+		// 	bestValue = p.GetValue();	// Calling it a second time simply returns the value that was computed before.
+		// 	bestPuzzle = p;
+
+
+		// }
 	}
 	
 	return bestPuzzle;
 	
 	// The following code is not executed in this function. It exists just as an example for getting all the successors of a puzzle.
-	vector<Puzzle> successors;
-	bestPuzzle.GetAllSuccessors(successors);
+	// vector<Puzzle> successors;
+	// bestPuzzle.GetAllSuccessors(successors);
+}
+
+Puzzle PuzzleGenerator::HillClimb(double timeLimit)
+{
+	// Generate first puzzle randomly
+	Puzzle p(nRows, nColumns, minVal, maxVal); 
+
+	Puzzle bestPuzzle = p;
+
+	Timer t;
+	t.StartTimer();
+
+	while(t.GetElapsedTime() < timeLimit-0.1)
+	{
+		vector<Puzzle> successors;
+		bestPuzzle.GetAllSuccessors(successors);
+		Puzzle topSuccessor = successors[0];
+		for(int i = 0; i < successors.size(); i++)
+		{
+			if(successors[i].GetValue() > topSuccessor.GetValue())
+			{
+				printf("New value: %d ", successors[i].GetValue());
+				printf("Old value: %d\n", topSuccessor.GetValue());
+				topSuccessor = successors[i];
+			}
+		}
+
+		if(topSuccessor.GetValue() > bestPuzzle.GetValue())
+		{
+			bestPuzzle = topSuccessor;
+		}
+		else
+		{
+			return bestPuzzle;
+		}
+	}
+
+	// out of time
+	return bestPuzzle;
+
 }

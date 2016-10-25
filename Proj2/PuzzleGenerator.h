@@ -9,6 +9,7 @@ public:
 	PuzzleGenerator(int nRows, int nColumns, int minVal, int maxVal);
 	Puzzle GeneratePuzzle(); 
 	Puzzle RandomWalk(double timelimit);	// Time limit given in seconds.
+	Puzzle HillClimb(double timeLimit);
 	
 private:
 	int nRows, nColumns, minVal, maxVal;
