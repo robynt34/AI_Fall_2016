@@ -7,16 +7,21 @@ PuzzleGenerator::PuzzleGenerator(int _nRows, int _nColumns, int _minVal, int _ma
 
 Puzzle PuzzleGenerator::GeneratePuzzle()
 {
+
+	T = 100;
+	T_min = .001;
+	alpha = .99;
+
 	timer.StartTimer();
 	maxtime = 59.9;	// To make sure we don't exceed a minute
 	
 	// We could also do as many random walks as we can within the given time limit.
-	Puzzle bestPuzzle(nRows, nColumns, minVal, maxVal);
+	Puzzle basePuzzle(nRows, nColumns, minVal, maxVal);
+	Puzzle bestPuzzle = SimulatedAnnealing(basePuzzle);
 	while (timer.GetElapsedTime() + 5 < maxtime)
 	{
-
-		Puzzle p = HillClimb(5);
-
+		 basePuzzle = Puzzle(nRows, nColumns, minVal, maxVal);
+		 Puzzle p = SimulatedAnnealing(basePuzzle);
 		// Check if p is better than the best puzzle we have found so far.
 		if(p.GetValue() > bestPuzzle.GetValue())
 		{
@@ -116,5 +121,37 @@ Puzzle PuzzleGenerator::HillClimb(double timeLimit)
 
 	// out of time
 	return bestPuzzle;
+}
 
+Puzzle PuzzleGenerator::SimulatedAnnealing(Puzzle p)
+{
+	// Gen random solution
+	Puzzle original = p;
+	T = 100;
+
+	while(T > T_min)
+	{
+		Puzzle neighbor = original.GetRandomSuccessor();
+		if(neighbor.GetValue() > original.GetValue())
+		{
+			original = neighbor;
+		}
+		else
+		{
+			// figure out acceptance probability (a = e^((old-new)/T))
+			int dif = neighbor.GetValue() - original.GetValue();
+			double newVal = exp(dif/T);
+			double randomVal = (rand() % 1000) / 1000.0;
+			if(newVal > randomVal)
+			{
+				printf("neighbor val: %d ", neighbor.GetValue());
+				printf("newVal: %d ", newVal);
+				printf(" randomVal: %d\n", randomVal);
+				original = neighbor;
+			}
+		}
+
+		T *= alpha;
+	}
+	return original;
 }
