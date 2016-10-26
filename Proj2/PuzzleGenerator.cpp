@@ -9,7 +9,7 @@ Puzzle PuzzleGenerator::GeneratePuzzle()
 {
 
 	T = 100;
-	T_min = .001;
+	T_min = .00001;
 	alpha = .99;
 
 	timer.StartTimer();
@@ -141,8 +141,8 @@ Puzzle PuzzleGenerator::SimulatedAnnealing(Puzzle p)
 		{
 			// figure out acceptance probability (a = e^((old-new)/T))
 			int dif = neighbor.GetValue() - original.GetValue();
-			double newVal = exp(dif/T);
-			double randomVal = (rand() % 1000) / 1000.0;
+			double newVal = pow(2.718, dif/T);
+			double randomVal = (double) (rand() % 100) / 100.0;
 			if(newVal > randomVal)
 			{
 				original = neighbor;
