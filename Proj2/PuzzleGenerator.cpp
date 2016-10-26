@@ -125,6 +125,7 @@ Puzzle PuzzleGenerator::HillClimb(double timeLimit)
 
 Puzzle PuzzleGenerator::SimulatedAnnealing(Puzzle p)
 {
+	// 	Reference site: katrinaeg.com/simulated-annealing.html
 	// Gen random solution
 	Puzzle original = p;
 	T = 100;
@@ -144,9 +145,6 @@ Puzzle PuzzleGenerator::SimulatedAnnealing(Puzzle p)
 			double randomVal = (rand() % 1000) / 1000.0;
 			if(newVal > randomVal)
 			{
-				printf("neighbor val: %d ", neighbor.GetValue());
-				printf("newVal: %d ", newVal);
-				printf(" randomVal: %d\n", randomVal);
 				original = neighbor;
 			}
 		}
