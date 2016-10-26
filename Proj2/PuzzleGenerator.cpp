@@ -9,7 +9,7 @@ Puzzle PuzzleGenerator::GeneratePuzzle()
 {
 
 	T = 100;
-	T_min = .00001;
+	T_min = .001;
 	alpha = .99;
 
 	timer.StartTimer();
@@ -17,8 +17,9 @@ Puzzle PuzzleGenerator::GeneratePuzzle()
 	
 	// We could also do as many random walks as we can within the given time limit.
 	Puzzle basePuzzle(nRows, nColumns, minVal, maxVal);
-	Puzzle bestPuzzle = SimulatedAnnealing(basePuzzle);
-	while (timer.GetElapsedTime() + 5 < maxtime)
+	// Puzzle bestPuzzle = SimulatedAnnealing(basePuzzle);
+	Puzzle bestPuzzle = basePuzzle;
+	while (timer.GetElapsedTime() < maxtime)
 	{
 		 basePuzzle = Puzzle(nRows, nColumns, minVal, maxVal);
 		 Puzzle p = SimulatedAnnealing(basePuzzle);
@@ -52,7 +53,7 @@ Puzzle PuzzleGenerator::RandomWalk(double timelimit)
 		// Generate a successor of p by randomly changing the value of a random cell 
 		// (since we are doing a random walk, we just replace p with its successor).
 		//p = p.GetRandomSuccessor();
-		printf("Best value: %d P: %d\n", bestValue, p.GetValue());
+		// printf("Best value: %d P: %d\n", bestValue, p.GetValue());
 
 		vector<Puzzle> successors;
 		bestPuzzle.GetAllSuccessors(successors);
@@ -130,7 +131,10 @@ Puzzle PuzzleGenerator::SimulatedAnnealing(Puzzle p)
 	Puzzle original = p;
 	T = 100;
 
-	while(T > T_min)
+	Timer time;
+	time.StartTimer();
+
+	while(time.GetElapsedTime() < 4.9 && T > T_min)
 	{
 		Puzzle neighbor = original.GetRandomSuccessor();
 		if(neighbor.GetValue() > original.GetValue())
@@ -140,12 +144,25 @@ Puzzle PuzzleGenerator::SimulatedAnnealing(Puzzle p)
 		else
 		{
 			// figure out acceptance probability (a = e^((old-new)/T))
-			int dif = neighbor.GetValue() - original.GetValue();
-			double newVal = pow(2.718, dif/T);
+			double dif = neighbor.GetValue() - original.GetValue();
+			dif /= T;
+			// printf("dif: %f T: %f\n", dif, T);
+
+			double newVal = (double) pow(2.718, (double) dif);
 			double randomVal = (double) (rand() % 100) / 100.0;
+			// printf("newVal: %f randomVal: %f\n", newVal, randomVal);
 			if(newVal > randomVal)
 			{
 				original = neighbor;
+			}
+		}
+		if(((double) (rand()%100)/100.0) < 1.0)
+		{
+			// random restart
+			Puzzle newP(nRows, nColumns, minVal, maxVal);
+			if(newP.GetValue() > original.GetValue())
+			{
+				original = newP;
 			}
 		}
 
