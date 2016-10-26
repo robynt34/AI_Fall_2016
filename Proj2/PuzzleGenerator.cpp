@@ -8,10 +8,10 @@ PuzzleGenerator::PuzzleGenerator(int _nRows, int _nColumns, int _minVal, int _ma
 Puzzle PuzzleGenerator::GeneratePuzzle()
 {
 
-	T = 100;
+	T = 100.0;
 	T_min = .001;
 	alpha = .99;
-
+	
 	timer.StartTimer();
 	maxtime = 59.9;	// To make sure we don't exceed a minute
 	
@@ -19,13 +19,14 @@ Puzzle PuzzleGenerator::GeneratePuzzle()
 	Puzzle basePuzzle(nRows, nColumns, minVal, maxVal);
 	// Puzzle bestPuzzle = SimulatedAnnealing(basePuzzle);
 	Puzzle bestPuzzle = basePuzzle;
-	while (timer.GetElapsedTime() < maxtime)
+	while (timer.GetElapsedTime()+3 < maxtime)
 	{
 		 basePuzzle = Puzzle(nRows, nColumns, minVal, maxVal);
 		 Puzzle p = SimulatedAnnealing(basePuzzle);
 		// Check if p is better than the best puzzle we have found so far.
 		if(p.GetValue() > bestPuzzle.GetValue())
 		{
+			printf("better val: %d\n", p.GetValue());
 			bestPuzzle = p;
 		}
 	}
@@ -129,34 +130,37 @@ Puzzle PuzzleGenerator::SimulatedAnnealing(Puzzle p)
 	// 	Reference site: katrinaeg.com/simulated-annealing.html
 	// Gen random solution
 	Puzzle original = p;
-	T = 100;
+	T = 100.0;
 
 	Timer time;
 	time.StartTimer();
 
-	while(time.GetElapsedTime() < 4.9 && T > T_min)
+	while(time.GetElapsedTime() < 3 && T > T_min)
 	{
-		Puzzle neighbor = original.GetRandomSuccessor();
-		if(neighbor.GetValue() > original.GetValue())
+		for(int i = 0; i < 100; i++)
 		{
-			original = neighbor;
-		}
-		else
-		{
-			// figure out acceptance probability (a = e^((old-new)/T))
-			double dif = neighbor.GetValue() - original.GetValue();
-			dif /= T;
-			// printf("dif: %f T: %f\n", dif, T);
-
-			double newVal = (double) pow(2.718, (double) dif);
-			double randomVal = (double) (rand() % 100) / 100.0;
-			// printf("newVal: %f randomVal: %f\n", newVal, randomVal);
-			if(newVal > randomVal)
+			Puzzle neighbor = original.GetRandomSuccessor();
+			if(neighbor.GetValue() > original.GetValue())
 			{
 				original = neighbor;
 			}
+			else
+			{
+				// figure out acceptance probability (a = e^((old-new)/T))
+				double dif = neighbor.GetValue() - original.GetValue();
+				dif /= T;
+				// printf("dif: %f T: %f\n", dif, T);
+
+				double newVal = (double) pow(2.718, (double) dif);
+				double randomVal = (double) (rand() % 100) / 100.0;
+				// printf("newVal: %f randomVal: %f\n", newVal, randomVal);
+				if(randomVal < newVal)
+				{
+					original = neighbor;
+				}
+			}
 		}
-		if(((double) (rand()%100)/100.0) < 1.0)
+		if((((double) (rand()%100)/100.0)) < 1.0)
 		{
 			// random restart
 			Puzzle newP(nRows, nColumns, minVal, maxVal);
