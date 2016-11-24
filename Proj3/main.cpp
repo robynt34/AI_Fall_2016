@@ -8,7 +8,7 @@ using namespace std;
 void Simulate(PartiallyKnownGrid* grid)
 {
 	// Use "GridPathPlanner planner(grid, true)" to test your Adaptive A* implementation.
-	GridPathPlanner planner(grid);
+	GridPathPlanner planner(grid, false);
 
 	// Start simulation
 	int steps = 0;

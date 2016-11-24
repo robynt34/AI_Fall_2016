@@ -12,7 +12,8 @@ public:
 	int GetNumExpansions();
 
 private:
-
+	bool adaptive_a_star;
+	int gridWidth, gridHeight;
 };
 
 #endif
