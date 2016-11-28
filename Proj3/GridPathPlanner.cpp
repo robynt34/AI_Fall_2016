@@ -14,6 +14,28 @@ GridPathPlanner::~GridPathPlanner(){
 	// TODO
 }
 
+bool GridPathPlanner::NodesEqual(Node x, Node y)
+{
+	if(x.mX == y.mX && x.mY == y.mY)
+	{
+		printf("return true from nodes equal\n");
+		return true;
+	}
+	printf("return false from nodes equal\n");
+	return false;
+}
+
+bool GridPathPlanner::InSet(std::vector<Node> v, Node n)
+{
+	for(int i = 0; i < v.size(); i++)
+	{
+		if(NodesEqual(n, v[i]))
+			return true;
+	}	
+	return false;
+}
+
+
 xyLoc GridPathPlanner::GetNextMove(PartiallyKnownGrid* grid) {
 	// TODO
 	// This is just a dummy implementation that returns a random neighbor.
@@ -21,73 +43,84 @@ xyLoc GridPathPlanner::GetNextMove(PartiallyKnownGrid* grid) {
 	{
 		// Use Forward A*
 		printf("Forward A* \n");
-		std::vector<xyLoc> open;
-		std::vector<xyLoc> closed;
-		std::vector<int> heuristic;
+		std::vector<Node> openSet;
+		std::vector<Node> closedSet;
 
-		xyLoc curr = grid->GetCurrentLocation();
-		xyLoc goal = grid->GetGoalLocation();
+		Node currNode(grid->GetCurrentLocation());
+		currNode.CreateNeighbors();
+		Node endNode(grid->GetGoalLocation());
+		endNode.CreateNeighbors();
+		closedSet.push_back(currNode);
+		int currIndex = 0;
 
-		// Add current location to closed list
-		closed.push_back(curr);
-		heuristic.push_back(0);
-
-		// Add neighbors to open list
-		open.push_back(xyLoc(curr.x+1, curr.y));
-		open.push_back(xyLoc(curr.x-1, curr.y));
-		open.push_back(xyLoc(curr.x, curr.y+1));
-		open.push_back(xyLoc(curr.x, curr.y-1));
-
-		while(curr != goal)
+		while(currNode.mX != endNode.mX && currNode.mY != endNode.mY)
 		{
-			// Create vector to track neighbors
-			std::vector<xyLoc> neighbors;
-			neighbors.push_back(xyLoc(curr.x+1, curr.y));
-			neighbors.push_back(xyLoc(curr.x-1, curr.y));
-			neighbors.push_back(xyLoc(curr.x, curr.y+1));
-			neighbors.push_back(xyLoc(curr.x, curr.y-1));
-
-			int index = 0;
-
-			for(int i = 0; i < neighbors.size(); i++)
+			printf("CurrNode X: %d Y: %d\n", currNode.mX, currNode.mY);
+			for(int i = 0; i < currNode.neighbors.size(); i++)
 			{
-				xyLoc checkIfContains;
-				for(int j = 0; j < open.size(); j++)
+				Node p = currNode.neighbors[i];
+				bool inClosedSet = InSet(closedSet, p);
+				if(inClosedSet)
 				{
-					if(neighbors[i] == open[i])
-					{
-						checkIfContains = open[i];
-						index = i;
-						break;
-					}
-
-				}
-
-				if(checkIfContains.x == -1 && checkIfContains.y == -1)
-				{
-					printf("NOTOPEN");
+					printf("-In Closed Set-\n");
+					continue;
 				}
 				else
 				{
-					if(grid->IsBlocked(checkIfContains))
+					printf("-Not in Closed Set-\n");
+					printf("Openset size: %d\n", openSet.size());
+					
+					bool inOpenSet = InSet(openSet, p);
+					if(inOpenSet)
 					{
-						printf("IS BLOCKED\n");
-						open.erase(open.begin()+index);
-						closed.push_back(checkIfContains);
-						continue;
+						printf("-In Open Set-\n");
+						float new_g = currNode.mG + 1;
+						if(new_g > p.mG)
+						{
+							p.mParent = &currNode;
+							p.neighbors[i].mG = new_g;
+							p.mF = p.mG + p.mH;
+						}
 					}
-
-					printf(" INOPEN X: %d Y: %d ", checkIfContains.x, checkIfContains.y);
-					int new_h = (checkIfContains.x - goal.x) + (checkIfContains.y - goal.y) + 1;
-					int total_path = 0;
-					for(int k = 0; k < heuristic.size(); k++)
-						total_path += heuristic[k];
-					printf("total_path: %d new_h: %d\n", total_path, new_h);
-					closed.push_back(checkIfContains);
-					heuristic.push_back(new_h);
+					else
+					{
+						printf("-Not in open set-\n");
+						p.mParent = &currNode;
+						p.mH = abs(p.mX - endNode.mX) + abs(p.mY - endNode.mY);
+						p.mG = currNode.mG + 1;
+						p.mF = p.mH + p.mG;
+						if(!grid->IsBlocked(p.loc))
+						{
+							printf("PUSHED BACK\n");
+							openSet.push_back(p);
+						}
+					}	
 				}
 			}
 
+			// set new Curr (node with lowest f in openSet)
+			Node new_curr = *openSet.begin();
+			for(int i = 0; i < openSet.size(); i++)
+			{
+				if(openSet[i].mF < new_curr.mF)
+				{
+					new_curr = openSet[i];
+				}
+			}
+			printf("openSetSize: %d\n", openSet.size());
+			for(int i = 0; i < openSet.size(); i++)
+			{
+				printf("INDEX: %d\n", i);
+				if(NodesEqual(currNode, openSet[i]))
+				{
+					printf("found current node\n");
+					currIndex = i;
+				}
+			}
+			printf("Line 120\n\n");
+			openSet.erase(openSet.begin() + currIndex);
+			closedSet.push_back(currNode);
+			currNode = new_curr;
 		}
 	}
 
