@@ -23,11 +23,14 @@ xyLoc GridPathPlanner::GetNextMove(PartiallyKnownGrid* grid) {
 		printf("Forward A* \n");
 		std::vector<xyLoc> open;
 		std::vector<xyLoc> closed;
+		std::vector<int> heuristic;
+
 		xyLoc curr = grid->GetCurrentLocation();
 		xyLoc goal = grid->GetGoalLocation();
 
 		// Add current location to closed list
 		closed.push_back(curr);
+		heuristic.push_back(0);
 
 		// Add neighbors to open list
 		open.push_back(xyLoc(curr.x+1, curr.y));
@@ -35,36 +38,57 @@ xyLoc GridPathPlanner::GetNextMove(PartiallyKnownGrid* grid) {
 		open.push_back(xyLoc(curr.x, curr.y+1));
 		open.push_back(xyLoc(curr.x, curr.y-1));
 
-		// Create vector to track neighbors
-		std::vector<xyLoc> neighbors;
-		neighbors.push_back(xyLoc(curr.x+1, curr.y));
-		neighbors.push_back(xyLoc(curr.x-1, curr.y));
-		neighbors.push_back(xyLoc(curr.x, curr.y+1));
-		neighbors.push_back(xyLoc(curr.x, curr.y-1));
-
-		// while(curr != goal)
-		// {
-
-		// }
-		for(int i = 0; i < neighbors.size(); i++)
+		while(curr != goal)
 		{
-			xyLoc checkIfContains;
-			for(int j = 0; j < open.size(); j++)
+			// Create vector to track neighbors
+			std::vector<xyLoc> neighbors;
+			neighbors.push_back(xyLoc(curr.x+1, curr.y));
+			neighbors.push_back(xyLoc(curr.x-1, curr.y));
+			neighbors.push_back(xyLoc(curr.x, curr.y+1));
+			neighbors.push_back(xyLoc(curr.x, curr.y-1));
+
+			int index = 0;
+
+			for(int i = 0; i < neighbors.size(); i++)
 			{
-				if(neighbors[i] == open[i])
+				xyLoc checkIfContains;
+				for(int j = 0; j < open.size(); j++)
 				{
-					checkIfContains = open[i];
-					break;
+					if(neighbors[i] == open[i])
+					{
+						checkIfContains = open[i];
+						index = i;
+						break;
+					}
+
 				}
 
+				if(checkIfContains.x == -1 && checkIfContains.y == -1)
+				{
+					printf("NOTOPEN");
+				}
+				else
+				{
+					if(grid->IsBlocked(checkIfContains))
+					{
+						printf("IS BLOCKED\n");
+						open.erase(open.begin()+index);
+						closed.push_back(checkIfContains);
+						continue;
+					}
+
+					printf(" INOPEN X: %d Y: %d ", checkIfContains.x, checkIfContains.y);
+					int new_h = (checkIfContains.x - goal.x) + (checkIfContains.y - goal.y) + 1;
+					int total_path = 0;
+					for(int k = 0; k < heuristic.size(); k++)
+						total_path += heuristic[k];
+					printf("total_path: %d new_h: %d\n", total_path, new_h);
+					closed.push_back(checkIfContains);
+					heuristic.push_back(new_h);
+				}
 			}
 
-			if(checkIfContains.x == -1 && checkIfContains.y == -1)
-				printf("NOTOPEN");
-			else
-				printf(" INOPEN ");
 		}
-		
 	}
 
 	xyLoc curre = grid->GetCurrentLocation();
