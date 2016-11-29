@@ -7,8 +7,7 @@ GridPathPlanner::GridPathPlanner(PartiallyKnownGrid* grid, bool use_adaptive_a_s
 	gridWidth = grid->GetWidth();
 	gridHeight = grid->GetHeight();
 
-printf("TEST");
-	CreateNodes(gridWidth, gridHeight);
+	CreateNodes(gridWidth, gridHeight, grid);
 
 	printf("Width: %d Height: %d\n", gridWidth, gridHeight);
 }
@@ -17,7 +16,7 @@ GridPathPlanner::~GridPathPlanner(){
 	// TODO
 }
 
-void GridPathPlanner::CreateNodes(int width, int height)
+void GridPathPlanner::CreateNodes(int width, int height, PartiallyKnownGrid *grid)
 {
 	mNodes = new Node*[width];
 	for(int i = 0; i < width; i++)
@@ -29,32 +28,42 @@ void GridPathPlanner::CreateNodes(int width, int height)
 	{
 		for(int j = 0; j < height; j++)
 		{
+			xyLoc location(i,j);
+			mNodes[i][j].loc = location;
 			mNodes[i][j].mX = i;
 			mNodes[i][j].mY = j;
 		}
 	}
 
-	printf("set neighbors\n");
 	for(int i = 0; i < width; i++)
 	{
 		for(int j = 0; j < height; j++)
 		{
 			Node cur = mNodes[i][j];
-			printf("(%d, %d)\n", i, j);
+			// printf("(%d, %d)\n", i, j);
+
 			// Create Neighbors List
 			if(i < 39) cur.neighbors.push_back(mNodes[i+1][j]);
 			if(i > 0) cur.neighbors.push_back(mNodes[i-1][j]);
 			if(j < 9) cur.neighbors.push_back(mNodes[i][j+1]);
 			if(j > 0) cur.neighbors.push_back(mNodes[i][j-1]);
 
+			// Remove known blocked nodes from neighbor list
+			for (int x = 0; x < cur.neighbors.size(); x++) {
+				xyLoc n = cur.neighbors[x].loc;
+				if (!grid->IsValidLocation(n) || grid->IsBlocked(n)) {
+					cur.neighbors[x] = cur.neighbors.back();
+					cur.neighbors.pop_back();
+					x--;
+				}
+			}
+			printf("Node (%d, %d)\n", i, j);
 			for(int n = 0; n < cur.neighbors.size(); n++)
 			{
-				printf("---neighbor (%d, %d)\n", cur.neighbors[n].mX, cur.neighbors[n].mY);
+				printf("---Neighbor (%d, %d)\n", cur.neighbors[n].mX, cur.neighbors[n].mY);
 			}
 		}
 	}
-
-	printf("done\n");
 }
 
 bool GridPathPlanner::NodesEqual(Node x, Node y)

@@ -23,15 +23,6 @@ struct Node{
 		printf("Made node X: %d Y: %d\n", mX, mY);
 	
 	}
-
-	void CreateNeighbors()
-	{
-		printf("create neighbors\n");
-		neighbors.push_back(Node(xyLoc(mX+1, mY)));
-		neighbors.push_back(Node(xyLoc(mX-1, mY)));
-		neighbors.push_back(Node(xyLoc(mX, mY+1)));
-		neighbors.push_back(Node(xyLoc(mX, mY-1)));
-	}
 };
 
 class GridPathPlanner{
@@ -43,7 +34,7 @@ public:
 	int GetNumExpansions();
 	bool NodesEqual(Node x, Node y);
 	bool InSet(std::vector<Node> v, Node n);
-	void CreateNodes(int w, int h);
+	void CreateNodes(int w, int h, PartiallyKnownGrid *grid);
 
 private:
 	Node **mNodes;
