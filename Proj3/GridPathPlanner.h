@@ -2,6 +2,7 @@
 #define GRID_PATH_PLANNER_H
 
 #include "PartiallyKnownGrid.h"
+#include <set>
 
 struct Node{
 	xyLoc loc;
@@ -32,8 +33,6 @@ public:
 
 	xyLoc GetNextMove(PartiallyKnownGrid* grid);
 	int GetNumExpansions();
-	bool NodesEqual(Node x, Node y);
-	bool InSet(std::vector<Node> v, Node n);
 	void CreateNodes(int w, int h, PartiallyKnownGrid *grid);
 
 private:
