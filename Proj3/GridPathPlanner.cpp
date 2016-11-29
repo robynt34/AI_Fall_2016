@@ -43,14 +43,14 @@ void GridPathPlanner::CreateNodes(int width, int height, PartiallyKnownGrid *gri
 			// printf("(%d, %d)\n", i, j);
 
 			// Create Neighbors List
-			if(i < 39) cur->neighbors.push_back(mNodes[i+1][j]);
-			if(i > 0) cur->neighbors.push_back(mNodes[i-1][j]);
-			if(j < 9) cur->neighbors.push_back(mNodes[i][j+1]);
-			if(j > 0) cur->neighbors.push_back(mNodes[i][j-1]);
+			if(i < 39) cur->neighbors.push_back(&mNodes[i+1][j]);
+			if(i > 0) cur->neighbors.push_back(&mNodes[i-1][j]);
+			if(j < 9) cur->neighbors.push_back(&mNodes[i][j+1]);
+			if(j > 0) cur->neighbors.push_back(&mNodes[i][j-1]);
 
 			// Remove known blocked nodes from neighbor list
 			for (int x = 0; x < cur->neighbors.size(); x++) {
-				xyLoc n = cur->neighbors[x].loc;
+				xyLoc n = cur->neighbors[x]->loc;
 				if (!grid->IsValidLocation(n) || grid->IsBlocked(n)) {
 					cur->neighbors[x] = cur->neighbors.back();
 					cur->neighbors.pop_back();
@@ -60,9 +60,18 @@ void GridPathPlanner::CreateNodes(int width, int height, PartiallyKnownGrid *gri
 			printf("Node (%d, %d)\n", i, j);
 			for(int n = 0; n < cur->neighbors.size(); n++)
 			{
-				printf("---Neighbor (%d, %d)\n", cur->neighbors[n].mX, cur->neighbors[n].mY);
+				printf("---Neighbor (%d, %d)\n", cur->neighbors[n]->mX, cur->neighbors[n]->mY);
 			}
 		}
+	}
+}
+
+void GridPathPlanner::PrintInfo(Node *n)
+{
+	printf("Node (%d, %d) with xyLoc(%d, %d)\n", n->mX, n->mY, n->loc.x, n->loc.y);
+	for(int i = 0; i < n->neighbors.size(); i++)
+	{
+		printf("-- Neighbor (%d, %d)\n", n->neighbors[i]->mX, n->neighbors[i]->mY);
 	}
 }
 
@@ -83,7 +92,8 @@ xyLoc GridPathPlanner::GetNextMove(PartiallyKnownGrid* grid) {
 		Node *endNode = &mNodes[endLoc.x][endLoc.y];
 	
 		closedSet.push_back(currentNode);
-		while(currentNode->mX != endNode->mX && currentNode->mY != endNode->mY)
+		PrintInfo(currentNode);
+		while(currentNode != endNode)
 		{
 			// for(int n = 0; n < currentNode->neighbors.size(); n++)
 			// {

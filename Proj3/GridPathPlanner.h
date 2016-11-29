@@ -10,7 +10,7 @@ struct Node{
 	int mX,mY;
 	struct Node *mParent;
 	bool mBlocked;
-	std::vector<Node> neighbors;
+	std::vector<Node*> neighbors;
 	Node(){
 		
 	}
@@ -30,7 +30,7 @@ class GridPathPlanner{
 public:
 	GridPathPlanner(PartiallyKnownGrid* grid, bool use_adaptive_a_star = false);
 	~GridPathPlanner();
-
+	void PrintInfo(Node *n);
 	xyLoc GetNextMove(PartiallyKnownGrid* grid);
 	int GetNumExpansions();
 	void CreateNodes(int w, int h, PartiallyKnownGrid *grid);
