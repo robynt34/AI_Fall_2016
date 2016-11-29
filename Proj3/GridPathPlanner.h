@@ -34,6 +34,7 @@ public:
 	xyLoc GetNextMove(PartiallyKnownGrid* grid);
 	int GetNumExpansions();
 	void CreateNodes(int w, int h, PartiallyKnownGrid *grid);
+	bool InSet(std::vector<Node*> set, Node *n);
 
 private:
 	Node **mNodes;
