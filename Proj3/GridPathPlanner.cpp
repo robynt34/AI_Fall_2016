@@ -7,11 +7,54 @@ GridPathPlanner::GridPathPlanner(PartiallyKnownGrid* grid, bool use_adaptive_a_s
 	gridWidth = grid->GetWidth();
 	gridHeight = grid->GetHeight();
 
+printf("TEST");
+	CreateNodes(gridWidth, gridHeight);
+
 	printf("Width: %d Height: %d\n", gridWidth, gridHeight);
 }
 
 GridPathPlanner::~GridPathPlanner(){
 	// TODO
+}
+
+void GridPathPlanner::CreateNodes(int width, int height)
+{
+	mNodes = new Node*[width];
+	for(int i = 0; i < width; i++)
+	{
+		mNodes[i] = new Node[height];
+	}
+
+	for(int i = 0; i < width; i++)
+	{
+		for(int j = 0; j < height; j++)
+		{
+			mNodes[i][j].mX = i;
+			mNodes[i][j].mY = j;
+		}
+	}
+
+	printf("set neighbors\n");
+	for(int i = 0; i < width; i++)
+	{
+		for(int j = 0; j < height; j++)
+		{
+			Node cur = mNodes[i][j];
+			printf("(%d, %d)\n", i, j);
+			// Create Neighbors List
+			if(i < 39) cur.neighbors.push_back(mNodes[i+1][j]);
+			if(i > 0) cur.neighbors.push_back(mNodes[i-1][j]);
+			if(j < 9) cur.neighbors.push_back(mNodes[i][j+1]);
+			if(j > 0) cur.neighbors.push_back(mNodes[i][j-1]);
+
+			for(int n = 0; n < cur.neighbors.size(); n++)
+			{
+				printf("---neighbor (%d, %d)\n", cur.neighbors[n].mX, cur.neighbors[n].mY);
+			}
+		}
+	}
+
+	printf("done\n");
 }
 
 bool GridPathPlanner::NodesEqual(Node x, Node y)
@@ -46,82 +89,12 @@ xyLoc GridPathPlanner::GetNextMove(PartiallyKnownGrid* grid) {
 		std::vector<Node> openSet;
 		std::vector<Node> closedSet;
 
-		Node currNode(grid->GetCurrentLocation());
-		currNode.CreateNeighbors();
-		Node endNode(grid->GetGoalLocation());
-		endNode.CreateNeighbors();
-		closedSet.push_back(currNode);
-		int currIndex = 0;
-
-		while(currNode.mX != endNode.mX && currNode.mY != endNode.mY)
-		{
-			printf("CurrNode X: %d Y: %d\n", currNode.mX, currNode.mY);
-			for(int i = 0; i < currNode.neighbors.size(); i++)
-			{
-				Node p = currNode.neighbors[i];
-				bool inClosedSet = InSet(closedSet, p);
-				if(inClosedSet)
-				{
-					printf("-In Closed Set-\n");
-					continue;
-				}
-				else
-				{
-					printf("-Not in Closed Set-\n");
-					printf("Openset size: %d\n", openSet.size());
-					
-					bool inOpenSet = InSet(openSet, p);
-					if(inOpenSet)
-					{
-						printf("-In Open Set-\n");
-						float new_g = currNode.mG + 1;
-						if(new_g > p.mG)
-						{
-							p.mParent = &currNode;
-							p.neighbors[i].mG = new_g;
-							p.mF = p.mG + p.mH;
-						}
-					}
-					else
-					{
-						printf("-Not in open set-\n");
-						p.mParent = &currNode;
-						p.mH = abs(p.mX - endNode.mX) + abs(p.mY - endNode.mY);
-						p.mG = currNode.mG + 1;
-						p.mF = p.mH + p.mG;
-						if(!grid->IsBlocked(p.loc))
-						{
-							printf("PUSHED BACK\n");
-							openSet.push_back(p);
-						}
-					}	
-				}
-			}
-
-			// set new Curr (node with lowest f in openSet)
-			Node new_curr = *openSet.begin();
-			for(int i = 0; i < openSet.size(); i++)
-			{
-				if(openSet[i].mF < new_curr.mF)
-				{
-					new_curr = openSet[i];
-				}
-			}
-			printf("openSetSize: %d\n", openSet.size());
-			for(int i = 0; i < openSet.size(); i++)
-			{
-				printf("INDEX: %d\n", i);
-				if(NodesEqual(currNode, openSet[i]))
-				{
-					printf("found current node\n");
-					currIndex = i;
-				}
-			}
-			printf("Line 120\n\n");
-			openSet.erase(openSet.begin() + currIndex);
-			closedSet.push_back(currNode);
-			currNode = new_curr;
-		}
+		// Node currNode(grid->GetCurrentLocation());
+		// currNode.CreateNeighbors();
+		// Node endNode(grid->GetGoalLocation());
+		// endNode.CreateNeighbors();
+		// closedSet.push_back(currNode);
+		// int currIndex = 0;
 	}
 
 	xyLoc curre = grid->GetCurrentLocation();

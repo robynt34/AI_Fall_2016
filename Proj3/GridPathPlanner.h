@@ -11,7 +11,7 @@ struct Node{
 	bool mBlocked;
 	std::vector<Node> neighbors;
 	Node(){
-
+		
 	}
 
 	Node(xyLoc location){
@@ -43,8 +43,10 @@ public:
 	int GetNumExpansions();
 	bool NodesEqual(Node x, Node y);
 	bool InSet(std::vector<Node> v, Node n);
+	void CreateNodes(int w, int h);
 
 private:
+	Node **mNodes;
 	bool adaptive_a_star;
 	int gridWidth, gridHeight;
 };
