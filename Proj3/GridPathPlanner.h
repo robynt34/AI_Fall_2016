@@ -40,6 +40,7 @@ private:
 	Node **mNodes;
 	bool adaptive_a_star;
 	int gridWidth, gridHeight;
+	int numExpansions;
 };
 
 #endif

@@ -6,6 +6,7 @@ GridPathPlanner::GridPathPlanner(PartiallyKnownGrid* grid, bool use_adaptive_a_s
 	adaptive_a_star = use_adaptive_a_star;
 	gridWidth = grid->GetWidth();
 	gridHeight = grid->GetHeight();
+	numExpansions = 0;
 
 	CreateNodes(gridWidth, gridHeight, grid);
 
@@ -43,9 +44,9 @@ void GridPathPlanner::CreateNodes(int width, int height, PartiallyKnownGrid *gri
 			// printf("(%d, %d)\n", i, j);
 
 			// Create Neighbors List
-			if(i < 39) cur->neighbors.push_back(&mNodes[i+1][j]);
+			if(i < width-1) cur->neighbors.push_back(&mNodes[i+1][j]);
 			if(i > 0) cur->neighbors.push_back(&mNodes[i-1][j]);
-			if(j < 9) cur->neighbors.push_back(&mNodes[i][j+1]);
+			if(j < height-1) cur->neighbors.push_back(&mNodes[i][j+1]);
 			if(j > 0) cur->neighbors.push_back(&mNodes[i][j-1]);
 
 			// Remove known blocked nodes from neighbor list
@@ -86,123 +87,125 @@ bool GridPathPlanner::InSet(std::vector<Node*> set, Node *n) {
 
 
 xyLoc GridPathPlanner::GetNextMove(PartiallyKnownGrid* grid) {
-	// TODO
 	// This is just a dummy implementation that returns a random neighbor.
+
+	// Use Forward A*
 	if(!adaptive_a_star)
-	{
-		// Use Forward A*
 		printf("Forward A* \n");
-		std::vector<Node*> openSet;
-		std::vector<Node*> closedSet;
+	else
+		printf("Adaptive A*\n");
+	std::vector<Node*> openSet;
+	std::vector<Node*> closedSet;
 
-		xyLoc currentLoc = grid->GetCurrentLocation();
-		Node *currentNode = &mNodes[currentLoc.x][currentLoc.y];
-		Node *startNode = currentNode;
+	xyLoc currentLoc = grid->GetCurrentLocation();
+	Node *currentNode = &mNodes[currentLoc.x][currentLoc.y];
+	Node *startNode = currentNode;
 
-		xyLoc endLoc = grid->GetGoalLocation();
-		Node *endNode = &mNodes[endLoc.x][endLoc.y];
-	
-		closedSet.push_back(currentNode);
-		// PrintInfo(currentNode);
-		while(currentNode != endNode)
+	xyLoc endLoc = grid->GetGoalLocation();
+	Node *endNode = &mNodes[endLoc.x][endLoc.y];
+
+	closedSet.push_back(currentNode);
+	// PrintInfo(currentNode);
+	while(currentNode != endNode)
+	{
+		for(int n = 0; n < currentNode->neighbors.size(); n++)
 		{
-			for(int n = 0; n < currentNode->neighbors.size(); n++)
+			Node *p = currentNode->neighbors[n];
+			// printf("Searching through neighbors\n");
+			bool inClosedSet = InSet(closedSet, p);
+			if(inClosedSet)
 			{
-				Node *p = currentNode->neighbors[n];
-				// printf("Searching through neighbors\n");
-				bool inClosedSet = InSet(closedSet, p);
-				if(inClosedSet)
+				// printf("In closed set: ");
+				// PrintInfo(p);
+				continue;
+			}
+			else
+			{
+				// printf("Not in closed set: ");
+				// PrintInfo(p);
+				bool inOpenSet = InSet(openSet, p);
+				if(inOpenSet)
 				{
-					// printf("In closed set: ");
+					// printf("In open set: ");
 					// PrintInfo(p);
-					continue;
+					int new_g = currentNode->mG + 1;
+
+					if(new_g > p->mG)
+					{
+						p->mParent = currentNode;
+						p->mG = new_g;
+						p->mF = p->mG + p->mH;
+					}
 				}
 				else
 				{
-					// printf("Not in closed set: ");
-					// PrintInfo(p);
-					bool inOpenSet = InSet(openSet, p);
-					if(inOpenSet)
-					{
-						// printf("In open set: ");
-						// PrintInfo(p);
-						int new_g = currentNode->mG + 1;
-						if(new_g > p->mG)
-						{
-							p->mParent = currentNode;
-							p->mG = new_g;
-							p->mF = p->mG + p->mH;
-						}
-					}
-					else
-					{
-						p->mParent = currentNode;
+					p->mParent = currentNode;
+					if(!adaptive_a_star)
 						p->mH = abs(p->mX - endNode->mX) + abs(p->mY - endNode->mY);
-						p->mG = currentNode->mG + 1;
-						p->mF = p->mH + p->mG;
-						if(!grid->IsBlocked(p->loc))
-						{
-							// printf("PUSHED BACK\n");
-							openSet.push_back(p);
-						}
+					p->mG = currentNode->mG + 1;
+					p->mF = p->mH + p->mG;
+					if(!grid->IsBlocked(p->loc))
+					{
+						// printf("PUSHED BACK\n");
+						openSet.push_back(p);
+
 					}
 				}
 			}
-
-			// Find node with lowest f
-			Node *smallest = *openSet.begin();
-			// printf("Starting with ");
-			// PrintInfo(smallest);
-			int removeIndex = 0;
-			for(int s = 0; s < openSet.size(); s++)
-			{
-				if(openSet[s]->mF < smallest->mF)
-				{
-					removeIndex = s;
-					// printf("Found smallest!: ");
-					// PrintInfo(openSet[s]);
-					smallest = openSet[s];
-				}
-			}
-
-			openSet.erase(openSet.begin() + removeIndex);
-			closedSet.push_back(currentNode);
-			currentNode = smallest;
 		}
 
-		Node * secondToLast;
-		while(currentNode != startNode)
+		// Find node with lowest f
+		Node *smallest = *openSet.begin();
+		// printf("Starting with ");
+		// PrintInfo(smallest);
+		int removeIndex = 0;
+		for(int s = 0; s < openSet.size(); s++)
 		{
-			secondToLast = currentNode;
-			currentNode = currentNode->mParent;
+			if(openSet[s]->mF < smallest->mF)
+			{
+				removeIndex = s;
+				// printf("Found smallest!: ");
+				// PrintInfo(openSet[s]);
+				smallest = openSet[s];
+			}
 		}
 
-		return secondToLast->loc;
+		openSet.erase(openSet.begin() + removeIndex);
+		closedSet.push_back(currentNode);
+		numExpansions++;
+
+		currentNode = smallest;
 	}
 
-	xyLoc curre = grid->GetCurrentLocation();
-	std::vector<xyLoc> neighbors;
-	neighbors.push_back(xyLoc(curre.x+1, curre.y));
-	neighbors.push_back(xyLoc(curre.x-1, curre.y));
-	neighbors.push_back(xyLoc(curre.x, curre.y+1));
-	neighbors.push_back(xyLoc(curre.x, curre.y-1));
-
-	for (int i = 0; i < neighbors.size(); i++) {
-		xyLoc n = neighbors[i];
-		if (!grid->IsValidLocation(n) || grid->IsBlocked(n)) {
-			neighbors[i] = neighbors.back();
-			neighbors.pop_back();
-			i--;
+	if(adaptive_a_star)
+	{
+		// startNode->mH = endNode->mG - startNode->mG;
+		for(int i = 0; i < closedSet.size(); i++)
+		{
+			// printf("Start node H: %d\n", closedSet[i]->mH);	
+			closedSet[i]->mH = endNode->mG - closedSet[i]->mG;						
+			// printf("Start node H: %d\n\n", closedSet[i]->mH);	
 		}
+		// printf("Start node H: %d\n", startNode->mH);
+		// startNode->mH = endNode->mG - startNode->mG;
+
+		// printf("Start node H after: %d\n", startNode->mH);
+		// startNode->mF = startNode->mG + startNode->mH;
 	}
 
-	if (neighbors.size() == 0)
-		return kInvalidXYLoc;
-	else
-		return neighbors[rand()%neighbors.size()];
+	Node * secondToLast;
+	while(currentNode != startNode)
+	{
+		secondToLast = currentNode;
+		currentNode = currentNode->mParent;
+	}
+
+	printf("Num Expansions: %d\n", GetNumExpansions());
+
+	return secondToLast->loc;
 }
 
-int GetNumExpansions() {
+int GridPathPlanner::GetNumExpansions() {
 	// TODO
-	return 0;
+	return numExpansions;
 }
