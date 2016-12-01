@@ -140,7 +140,7 @@ xyLoc GridPathPlanner::GetNextMove(PartiallyKnownGrid* grid) {
 				else
 				{
 					p->mParent = currentNode;
-					if(!adaptive_a_star)
+					if(!adaptive_a_star || p->mH == 0)
 						p->mH = abs(p->mX - endNode->mX) + abs(p->mY - endNode->mY);
 					p->mG = currentNode->mG + 1;
 					p->mF = p->mH + p->mG;
@@ -168,6 +168,25 @@ xyLoc GridPathPlanner::GetNextMove(PartiallyKnownGrid* grid) {
 				// PrintInfo(openSet[s]);
 				smallest = openSet[s];
 			}
+			// else if (openSet[s]->mF == smallest->mF)
+			// {
+			// 	if(openSet[s]->mG > smallest->mG)
+			// 	{
+			// 		smallest = openSet[s];
+			// 	}
+			// 	else if(openSet[s]->mG == smallest->mG)
+			// 	{
+			// 		if(openSet[s]->loc < smallest->loc)
+			// 		{
+			// 			smallest = openSet[s];
+			// 		}
+			// 	}
+			// }
+// 			: If two states have the same f-value,
+// prioritize expanding the one with the larger g-value. If two states have the
+// same f- and g-values, prioritize expanding the one with the smaller xyLoc (the
+// ‘<’ operator is overloaded for the xyLoc struct in the provided code).
+
 		}
 
 		openSet.erase(openSet.begin() + removeIndex);
@@ -201,7 +220,7 @@ xyLoc GridPathPlanner::GetNextMove(PartiallyKnownGrid* grid) {
 	}
 
 	printf("Num Expansions: %d\n", GetNumExpansions());
-
+	
 	return secondToLast->loc;
 }
 

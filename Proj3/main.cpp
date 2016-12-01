@@ -8,7 +8,7 @@ using namespace std;
 void Simulate(PartiallyKnownGrid* grid)
 {
 	// Use "GridPathPlanner planner(grid, true)" to test your Adaptive A* implementation.
-	GridPathPlanner planner(grid, true);
+	GridPathPlanner planner(grid, false);
 
 	// Start simulation
 	int steps = 0;
@@ -41,7 +41,6 @@ void Simulate(PartiallyKnownGrid* grid)
 		//*/
         #endif
     }
-    printf("Num Expansions: %d\n", GetNumExpansions());
 	cout<<"Target found in "<<steps<<" steps !!!"<<endl;
 }
 
